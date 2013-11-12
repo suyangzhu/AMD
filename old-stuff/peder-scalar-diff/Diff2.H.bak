@@ -1,0 +1,72 @@
+#include "boost/operators.hpp"
+
+template <int n> class Diff;
+
+template <> class Diff<1> : 
+  boost::multipliable<Diff<1>, boost::addable<Diff<1> > >  {
+private:
+    double val, diff;
+public:
+    Diff() : val(), diff() {}
+    Diff(double val_, double diff_) : val(val_), diff(diff_) {}
+    Diff(const Diff<1>& x) : val(x.getVal()), diff(x.getDiff()) {}
+    void shift(const double val_, const Diff<1>& x) { 
+	val = val_; 
+	diff = x.getVal();
+    }
+    double getVal() const { return val; }
+    double getDiff() const { return diff; }
+    Diff<1>& operator= (const Diff<1>& x) {
+	val  = x.getVal();
+	diff = x.getDiff();
+	return(*this);
+    }
+    Diff<1>& operator *= (const Diff<1>& y) {
+	diff  = val * y.getDiff() + y.getVal() * diff;
+	val  *= y.getVal();
+	return(*this);
+    }
+
+    Diff<1>& operator += (const Diff<1>& y) {
+	diff += y.getDiff();
+	val  += y.getVal();
+	return(*this);
+    }
+};
+
+template <int n> class Diff : 
+  boost::multipliable<Diff<n>, boost::addable<Diff<n> > >
+{
+private:
+    double val;
+    Diff<n-1> diff;
+public:
+    Diff() : val(), diff() {}
+    Diff(double val_, Diff<n-1> diff_) : val(val_), diff(diff_) {}
+    Diff(const Diff<n>& x) : val(x.getVal()), diff(x.getDiff()) {}
+    void shift(const double val_, const Diff<n>& x) { 
+	val = val_; 
+	diff.shift(x.getVal(),x.getDiff());
+    }
+    double getVal() const { return val; }
+    Diff<n-1> getDiff() const { return diff; }
+    Diff<n>& operator= (const Diff<n>& x) {
+	val  = x.getVal();
+	diff = x.getDiff();
+	return(*this);
+    }
+    Diff<n>& operator *= (const Diff<n>& y) {
+	Diff<n-1> xS,yS;
+	xS.shift(val,diff);
+	yS.shift(y.getVal(),y.getDiff());
+	diff  = xS * y.getDiff() + yS * diff;
+	val  *= y.getVal();
+	return(*this);
+    }
+    Diff<n>& operator += (const Diff<n>& y) {
+	diff += y.getDiff();
+	val  += y.getVal();
+	return(*this);
+    }
+    
+}; 
